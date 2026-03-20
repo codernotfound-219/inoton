@@ -111,3 +111,63 @@ plt.show()
 # # Final step: Save the dataset
 # df.to_csv("synthetic_energy_data.csv")
 # print("Dataset successfully exported to synthetic_energy_data.csv")
+
+# Parameters for high-frequency sampling
+fs = 20  # 20 Hz
+duration_normal = 3600  # 1 hour of normal data
+duration_fault = 300    # 5 minutes of fault data
+
+def generate_waveform(duration, is_anomaly=False):
+    t = np.linspace(0, duration, int(fs * duration))
+    if not is_anomaly:
+        # Normal: Steady DC with minor ripple/noise
+        signal = 5.0 + 0.2 * np.sin(2 * np.pi * 0.5 * t) + np.random.normal(0, 0.1, len(t))
+    else:
+        # Anomaly: Massive spikes and chaotic fluctuations
+        signal = 5.0 + np.random.normal(0, 5.0, len(t)) + np.random.choice([0, 20], len(t), p=[0.9, 0.1])
+    
+    return np.clip(signal, 0, None)
+
+# Generate and combine
+normal_data = generate_waveform(duration_normal, is_anomaly=False)
+fault_data = generate_waveform(duration_fault, is_anomaly=True)
+
+# Create a labels column (0 for normal, 1 for anomaly) for your own verification
+# Note: The Autoencoder only trains on 'Normal' data (label 0).
+df_hf = pd.DataFrame({
+    'current_a': np.concatenate([normal_data, fault_data]),
+    'label': np.concatenate([np.zeros(len(normal_data)), np.ones(len(fault_data))])
+})
+
+# 1. Load or reference the High-Frequency DataFrame
+# Sampling rate is 20Hz, so 200 samples = 10 seconds.
+transition_point = duration_normal * fs
+start_idx = transition_point - 300  # 15 seconds before fault
+end_idx = transition_point + 300    # 15 seconds after fault
+
+# 2. Plotting the Waveforms
+plt.figure(figsize=(15, 6))
+
+# Normal Segment
+plt.plot(range(start_idx, transition_point), 
+         df_hf['current_a'].iloc[start_idx:transition_point], 
+         color='green', label='Normal Operation (Steady DC + Ripple)', alpha=0.8)
+
+# Fault Segment
+plt.plot(range(transition_point, end_idx), 
+         df_hf['current_a'].iloc[transition_point:end_idx], 
+         color='red', label='Short Circuit Anomaly (High Frequency Spikes)', alpha=0.8)
+
+# Formatting
+plt.axvline(x=transition_point, color='black', linestyle='--', label='Fault Injection Point')
+plt.title("High-Frequency Current Analysis: Normal vs. Anomaly States")
+plt.xlabel("Sample Index (20Hz)")
+plt.ylabel("Current (Amperes)")
+plt.legend(loc='upper left')
+plt.grid(True, which='both', linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.show()
+
+# df_hf.to_csv("high_frequency_current.csv", index=False)
+# print("Autoencoder training data generated.")
