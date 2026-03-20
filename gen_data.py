@@ -54,3 +54,60 @@ ax2.fill_between(df_plot.index, df_plot['cloud_cover'], color='tab:blue', alpha=
 
 plt.title("Environmental Variable Correlation (48 Hour Sample)")
 plt.show()
+
+# Constants for a tabletop-scale microgrid
+P_MAX_SOLAR = 500.0  # Watts
+BASE_LOAD = 50.0     # Watts
+AC_COEFFICIENT = 20.0 # Watts per Degree Celsius above 30C
+
+# Ensure 'hours' is calculated with floating-point precision for smooth transitions
+hours = df.index.hour + df.index.minute / 60.0
+
+# 1. Solar Irradiance (W)
+# Model: Cosine curve centered at 12:00 (Noon) attenuated by Cloud Cover
+df['solar_irradiance_w'] = P_MAX_SOLAR * np.maximum(0, np.cos(np.pi * (hours - 12) / 12))
+df['solar_irradiance_w'] *= (1 - 0.75 * df['cloud_cover'])
+
+# 2. Department Load (W)
+# Logic: Base Load + Workday Activity (09:00 - 17:00) + AC Surge based on Temperature
+df['dept_load_w'] = BASE_LOAD
+work_mask = (df.index.hour >= 9) & (df.index.hour <= 17)
+df.loc[work_mask, 'dept_load_w'] += 400.0
+# AC Spike: Triggered only when Temp > 30C during work hours
+ac_spike = np.maximum(0, df['temperature_c'] - 30.0) * AC_COEFFICIENT
+df.loc[work_mask, 'dept_load_w'] += ac_spike
+
+# 3. Hostel Load (W)
+# Logic: Base Load + Evening/Night Usage (18:00 - 02:00)
+df['hostel_load_w'] = BASE_LOAD
+hostel_mask = (df.index.hour >= 18) | (df.index.hour < 2)
+df.loc[hostel_mask, 'hostel_load_w'] += 450.0
+
+# Add Stochastic Noise (5%) to simulate real-world sensor fluctuations
+cols_to_noise = ['solar_irradiance_w', 'dept_load_w', 'hostel_load_w']
+for col in cols_to_noise:
+    noise = np.random.normal(0, df[col].mean() * 0.05, len(df))
+    df[col] = (df[col] + noise).clip(lower=0)
+
+# Calculate Total Demand for verification
+df['total_load_w'] = df['dept_load_w'] + df['hostel_load_w']
+
+plt.figure(figsize=(14, 6))
+# Plotting the first 48 hours
+df_sample = df.iloc[:288*2]
+
+plt.plot(df_sample.index, df_sample['solar_irradiance_w'], label='Solar Supply (W)', color='orange', linewidth=2)
+plt.plot(df_sample.index, df_sample['total_load_w'], label='Total Load Demand (W)', color='black', linestyle='--')
+plt.fill_between(df_sample.index, df_sample['solar_irradiance_w'], df_sample['total_load_w'], 
+                 where=(df_sample['total_load_w'] > df_sample['solar_irradiance_w']),
+                 color='red', alpha=0.2, label='Energy Deficit (Battery/Grid Needed)')
+
+plt.title("Microgrid Power Balance: Supply vs Demand (48 Hour Sample)")
+plt.ylabel("Power (Watts)")
+plt.legend()
+plt.grid(True, which='both', linestyle='--', alpha=0.5)
+plt.show()
+
+# # Final step: Save the dataset
+# df.to_csv("synthetic_energy_data.csv")
+# print("Dataset successfully exported to synthetic_energy_data.csv")
