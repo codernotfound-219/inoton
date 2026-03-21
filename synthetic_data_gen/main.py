@@ -9,7 +9,7 @@ def run_pipeline():
     df = models.generate_base_df()
     df = models.apply_environmental_models(df)
     df = models.apply_power_metrics(df)
-    df.to_csv("synthetic_energy_data.csv")
+    df.to_csv("synthetic_energy_data.csv", index=False)
     print("Main Telemetry Exported.")
     
     # 2. High-Frequency Generation
