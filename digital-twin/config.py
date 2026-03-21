@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # MQTT Configuration
-    MQTT_BROKER: str = "127.0.0.1" 
+    MQTT_BROKER: str = "MQTT_BROKER_IP" 
     MQTT_PORT: int = 1883
     
     # Topic Definitions (Standardize these now to avoid mismatches)

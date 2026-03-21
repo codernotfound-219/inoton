@@ -67,8 +67,8 @@ The backend subscribes to these topics (see `config.py`):
 Example publishes:
 
 ```bash
-mosquitto_pub -h 127.0.0.1 -p 1883 -t microgrid/telemetry -m '{"solar_w":120,"soc":67.5,"load_w":180}'
-mosquitto_pub -h 127.0.0.1 -p 1883 -t microgrid/sensors/current -m '{"current":1.23}'
+mosquitto_pub -h MQTT_BROKER_IP -p 1883 -t microgrid/telemetry -m '{"solar_w":120,"soc":67.5,"load_w":180}'
+mosquitto_pub -h MQTT_BROKER_IP -p 1883 -t microgrid/sensors/current -m '{"current":1.23}'
 ```
 
 ## Configuration
@@ -78,11 +78,24 @@ Settings are defined in `config.py` and can be overridden via environment variab
 If you want to use a `.env` file (recommended for local config), create one in the repo root:
 
 ```env
-MQTT_BROKER=127.0.0.1
+MQTT_BROKER=MQTT_BROKER_IP
 MQTT_PORT=1883
 TOPIC_TELEMETRY=microgrid/telemetry
 TOPIC_HIGH_FREQ=microgrid/sensors/current
 TOPIC_CONTROL=microgrid/control/relays
+```
+
+### Frontend backend host (optional)
+
+By default, the frontend connects to `http://localhost:8000` and `ws://localhost:8000`.
+
+To override (useful when accessing the UI from another device), create `dashboard/.env`:
+
+```env
+VITE_BACKEND_HOST=localhost
+VITE_BACKEND_PORT=8000
+VITE_BACKEND_HTTP_PROTO=http
+VITE_BACKEND_WS_PROTO=ws
 ```
 
 ## Notes
