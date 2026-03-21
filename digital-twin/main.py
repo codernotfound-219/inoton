@@ -1,3 +1,9 @@
+"""Legacy MQTT ingestion.
+
+The FastAPI app in `api.py` now starts MQTT ingestion on startup.
+This module is kept around for reference/experimentation.
+"""
+
 import asyncio
 import json
 from paho.mqtt import client as mqtt_client
@@ -25,9 +31,11 @@ def on_message(client, userdata, msg):
             state.solar_watts = payload.get("solar_w", state.solar_watts)
             state.battery_soc = payload.get("soc", state.battery_soc)
             state.total_load = payload.get("load_w", state.total_load)
+            state.last_updated = asyncio.get_event_loop().time()
             print(f"📊 State Updated: Solar={state.solar_watts}W | SOC={state.battery_soc}%")
         elif topic == settings.TOPIC_HIGH_FREQ:
             state.current_a = payload.get("current", state.current_a)
+            state.last_updated = asyncio.get_event_loop().time()
             # INFO: add the anamoly detection trigger here
 
     except Exception as e:
