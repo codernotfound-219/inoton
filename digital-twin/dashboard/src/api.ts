@@ -36,3 +36,36 @@ export function connectStateWS(onState: (s: MicrogridState) => void) {
 
   return ws
 }
+
+export async function setRelays(body: { relay1?: boolean; relay2?: boolean; target?: string }) {
+  const base = getBackendHttpBase()
+  const res = await fetch(`${base}/api/control/relays`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as { ok: boolean; command_id: string }
+}
+
+export async function shedLoad() {
+  const base = getBackendHttpBase()
+  const res = await fetch(`${base}/api/control/shed`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as { ok: boolean; command_id: string; which: string }
+}
+
+export async function setBatteryMode(mode: 'CHARGE' | 'DISCHARGE' | 'IDLE' | 'AUTO') {
+  const base = getBackendHttpBase()
+  const res = await fetch(`${base}/api/control/battery_mode`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ mode }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as { ok: boolean; command_id: string; mode: string }
+}

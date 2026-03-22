@@ -8,6 +8,7 @@ class MicrogridState(BaseModel):
     battery_temp: float = 25.0
     total_load: float = 0.0
     current_a: float = 0.0
+    bus_v: float = 0.0
     
     # Model Outputs (Inputs from your teammate's AI)
     predicted_load: float = 0.0
@@ -15,7 +16,10 @@ class MicrogridState(BaseModel):
     anomaly_score: float = 0.0
     
     # Control & Logic States (Derived by your Twin)
-    relay_status: bool = True       # True = Closed (On)
+    # Relay states (True = Closed/On). relay_status kept for backward compatibility (mirrors load1).
+    relay_status: bool = True
+    relay_load1: bool = True
+    relay_load2: bool = True
     active_source: str = "Solar"    # "Solar", "Battery", or "Grid"
     
     # Meta Info

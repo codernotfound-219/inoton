@@ -226,6 +226,36 @@ body {
   padding: 8px 10px;
 }
 
+.btn {
+  background: rgba(0,0,0,0.22);
+  color: rgba(255,255,255,0.86);
+  border: 1px solid rgba(124,92,255,0.28);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.btn:hover {
+  background: rgba(124,92,255,0.10);
+  border-color: rgba(124,92,255,0.42);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.danger {
+  border-color: rgba(255,92,122,0.30);
+}
+
+.btn.danger:hover {
+  background: rgba(255,92,122,0.10);
+  border-color: rgba(255,92,122,0.44);
+}
+
 /* Flow diagram */
 .flowWrap { width: 100%; overflow: hidden; position: relative; }
 .flow { width: 100%; height: 360px; border-radius: 16px; display: block; background: transparent; }
