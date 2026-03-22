@@ -15,6 +15,10 @@ export type MicrogridState = {
   relay_load2: boolean
   active_source: string
 
+  fault_active?: boolean
+  fault_code?: string | null
+  fault_reason?: string | null
+
   last_updated: number
 }
 
@@ -32,5 +36,8 @@ export const defaultState: MicrogridState = {
   relay_load1: true,
   relay_load2: true,
   active_source: 'Solar',
+  fault_active: false,
+  fault_code: null,
+  fault_reason: null,
   last_updated: 0,
 }

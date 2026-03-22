@@ -14,7 +14,7 @@ import { useTwinState } from '../state/useTwinState'
 import TopBar from '../components/TopBar'
 import PowerFlowDiagram from '../viz/PowerFlowDiagram'
 import { ThemedTooltip } from '../viz/ChartTooltip'
-import { setBatteryMode, setRelays, shedLoad } from '../api'
+import { clearFault, setBatteryMode, setRelays, shedLoad, simulateShortCircuitFault } from '../api'
 import { getFakeRlAction } from '../rl/fakeAgent'
 
 function fmtW(w: number) {
@@ -62,6 +62,22 @@ export default function DashboardPage() {
   const doBatteryMode = async (mode: 'CHARGE' | 'DISCHARGE' | 'IDLE' | 'AUTO') => {
     try {
       await setBatteryMode(mode)
+    } catch {
+      // ignore
+    }
+  }
+
+  const doShortCircuit = async () => {
+    try {
+      await simulateShortCircuitFault('Simulated short circuit fault')
+    } catch {
+      // ignore
+    }
+  }
+
+  const doClearFault = async () => {
+    try {
+      await clearFault()
     } catch {
       // ignore
     }
@@ -141,7 +157,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid2">
+      <div className="grid3">
         <div className="panel">
           <div className="panelHeader">
             <div className="panelTitle">Battery Control</div>
@@ -193,6 +209,39 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="hint">Requires ESP ACK on `microgrid/control/ack`</div>
+          </div>
+        </div>
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelTitle">Fault Simulation</div>
+            <div className="panelHint">Demo-only actions (latched until cleared)</div>
+          </div>
+          <div className="panelFooter">
+            <div className="metric">
+              Fault: {state.fault_active ? `${state.fault_code ?? 'ACTIVE'}` : 'None'}
+            </div>
+            <div className="metric">{state.fault_active ? (state.fault_reason ?? 'Trip latched') : 'System normal'}</div>
+          </div>
+          <div className="bottomBar">
+            <div className="bottomLeft">
+              <button
+                className="btn danger"
+                disabled={!canControl}
+                onClick={doShortCircuit}
+                title="Trip a simulated short-circuit: opens all relays and forces battery IDLE"
+              >
+                Simulate short circuit fault
+              </button>
+              <button
+                className="btn"
+                disabled={!canControl || !state.fault_active}
+                onClick={doClearFault}
+                title="Clear the latched fault (does not re-enable relays automatically)"
+              >
+                Clear fault
+              </button>
+            </div>
+            <div className="hint">Trips relays OFF + battery `IDLE`</div>
           </div>
         </div>
       </div>

@@ -69,3 +69,31 @@ export async function setBatteryMode(mode: 'CHARGE' | 'DISCHARGE' | 'IDLE' | 'AU
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return (await res.json()) as { ok: boolean; command_id: string; mode: string }
 }
+
+export async function simulateShortCircuitFault(reason?: string) {
+  const base = getBackendHttpBase()
+  const res = await fetch(`${base}/api/control/fault/short_circuit`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(reason ? { reason } : {}),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as {
+    ok: boolean
+    fault_active: boolean
+    fault_code: string
+    command_id_relays: string
+    command_id_battery: string
+  }
+}
+
+export async function clearFault() {
+  const base = getBackendHttpBase()
+  const res = await fetch(`${base}/api/control/fault/clear`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as { ok: boolean; fault_active: boolean }
+}
