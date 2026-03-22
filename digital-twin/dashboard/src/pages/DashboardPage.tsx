@@ -15,6 +15,7 @@ import TopBar from '../components/TopBar'
 import PowerFlowDiagram from '../viz/PowerFlowDiagram'
 import { ThemedTooltip } from '../viz/ChartTooltip'
 import { setBatteryMode, setRelays, shedLoad } from '../api'
+import { getFakeRlAction } from '../rl/fakeAgent'
 
 function fmtW(w: number) {
   if (!Number.isFinite(w)) return '—'
@@ -80,9 +81,8 @@ export default function DashboardPage() {
   )
 
   const actionText = useMemo(() => {
-    // Placeholder until the model is wired.
-    return 'MODEL: not connected'
-  }, [])
+    return getFakeRlAction(state)
+  }, [state])
 
   return (
     <div className="page">
@@ -122,8 +122,8 @@ export default function DashboardPage() {
           <div className="kpiTop">
             <div className="kpiTitle">RL Agent Action</div>
           </div>
-          <div className="kpiBig kpiAccent">{actionText}</div>
-          <div className="kpiSub">Placeholder until model is ready</div>
+          <div className="kpiBig kpiAccent">{actionText.label}</div>
+          <div className="kpiSub">{actionText.reason}</div>
         </div>
       </div>
 
