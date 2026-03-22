@@ -213,6 +213,69 @@ def set_battery_mode(body: dict) -> dict:
     return {"ok": True, "command_id": cmd_id, "mode": mode}
 
 
+@app.post("/api/control/fault/short_circuit")
+def simulate_short_circuit_fault(body: dict | None = None) -> dict:
+    """Simulate a short-circuit fault.
+
+    Behavior:
+    - Latches a fault flag in the in-memory twin state
+    - Opens (disconnects) all load relays via MQTT
+    - Forces the battery controller to IDLE via MQTT
+    """
+    cmd_id_relays = _new_command_id()
+    cmd_id_batt = _new_command_id()
+
+    state.fault_active = True
+    state.fault_code = "SHORT_CIRCUIT"
+    state.fault_reason = (body or {}).get("reason") or "Simulated short circuit fault"
+    state.last_updated = time.time()
+
+    relays_msg = {
+        "v": 1,
+        "command_id": cmd_id_relays,
+        "ts": int(time.time() * 1000),
+        "source": "digital-twin",
+        "target": "all",
+        "type": "set_relays",
+        "data": {"relay1": False, "relay2": False},
+        "ttl_ms": 5000,
+    }
+    _publish_json(settings.TOPIC_CONTROL, relays_msg)
+
+    batt_msg = {
+        "v": 1,
+        "command_id": cmd_id_batt,
+        "ts": int(time.time() * 1000),
+        "source": "digital-twin",
+        "target": "battery",
+        "type": "battery_mode",
+        "data": {"mode": "IDLE"},
+        "ttl_ms": 5000,
+    }
+    _publish_json(settings.TOPIC_CONTROL, batt_msg)
+
+    return {
+        "ok": True,
+        "fault_active": True,
+        "fault_code": state.fault_code,
+        "command_id_relays": cmd_id_relays,
+        "command_id_battery": cmd_id_batt,
+    }
+
+
+@app.post("/api/control/fault/clear")
+def clear_fault() -> dict:
+    """Clear latched fault flags in the twin.
+
+    Note: this does not automatically re-close relays; it only unlatches the fault.
+    """
+    state.fault_active = False
+    state.fault_code = None
+    state.fault_reason = None
+    state.last_updated = time.time()
+    return {"ok": True, "fault_active": False}
+
+
 @app.get("/api/control/commands/{command_id}")
 def get_command(command_id: str) -> dict:
     with _cmd_lock:

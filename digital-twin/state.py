@@ -24,3 +24,8 @@ class MicrogridState(BaseModel):
     
     # Meta Info
     last_updated: float = 0.0
+
+    # Fault Simulation (latched)
+    fault_active: bool = False
+    fault_code: Optional[str] = None
+    fault_reason: Optional[str] = None
