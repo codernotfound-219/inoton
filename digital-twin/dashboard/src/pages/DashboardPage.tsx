@@ -14,6 +14,7 @@ import { useTwinState } from '../state/useTwinState'
 import TopBar from '../components/TopBar'
 import PowerFlowDiagram from '../viz/PowerFlowDiagram'
 import { ThemedTooltip } from '../viz/ChartTooltip'
+import { setBatteryMode, setRelays, shedLoad } from '../api'
 
 function fmtW(w: number) {
   if (!Number.isFinite(w)) return '—'
@@ -38,6 +39,32 @@ function fmtTime(t: number) {
 
 export default function DashboardPage() {
   const { state, derived } = useTwinState()
+
+  const canControl = derived.connected
+
+  const doSetRelay = async (which: 'relay1' | 'relay2', value: boolean) => {
+    try {
+      await setRelays({ [which]: value })
+    } catch {
+      // ignore for now
+    }
+  }
+
+  const doShed = async () => {
+    try {
+      await shedLoad()
+    } catch {
+      // ignore
+    }
+  }
+
+  const doBatteryMode = async (mode: 'CHARGE' | 'DISCHARGE' | 'IDLE' | 'AUTO') => {
+    try {
+      await setBatteryMode(mode)
+    } catch {
+      // ignore
+    }
+  }
 
   const chartData = useMemo(
     () =>
@@ -112,6 +139,62 @@ export default function DashboardPage() {
           load2W={derived.load2W}
           gridW={derived.gridImportW}
         />
+      </div>
+
+      <div className="grid2">
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelTitle">Battery Control</div>
+            <div className="panelHint">Manual override (safe dead-time enforced on ESP)</div>
+          </div>
+          <div className="panelFooter">
+            <div className="metric">SoC: {fmtPct(state.battery_soc)}</div>
+            <div className="metric">Bus V: {state.bus_v ? `${state.bus_v.toFixed(2)} V` : '—'}</div>
+          </div>
+          <div className="bottomBar">
+            <div className="bottomLeft">
+              <button className="btn" disabled={!canControl} onClick={() => doBatteryMode('CHARGE')} title="Force battery controller into CHARGE mode">
+                Charge
+              </button>
+              <button className="btn" disabled={!canControl} onClick={() => doBatteryMode('DISCHARGE')} title="Force battery controller into DISCHARGE mode">
+                Discharge
+              </button>
+              <button className="btn" disabled={!canControl} onClick={() => doBatteryMode('IDLE')} title="Force battery controller into IDLE (both relays off)">
+                Idle
+              </button>
+              <button className="btn" disabled={!canControl} onClick={() => doBatteryMode('AUTO')} title="Return battery controller to automatic voltage-based control">
+                Auto
+              </button>
+            </div>
+            <div className="hint">Targets `battery` ESP</div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelTitle">Load Control</div>
+            <div className="panelHint">Relay actions reflected in schematic</div>
+          </div>
+          <div className="panelFooter">
+            <div className="metric">Load 1: {state.relay_load1 ? fmtW(derived.load1W) : 'OFF'}</div>
+            <div className="metric">Load 2: {state.relay_load2 ? fmtW(derived.load2W) : 'OFF'}</div>
+            <div className="metric">Total: {fmtW(state.total_load)}</div>
+          </div>
+          <div className="bottomBar">
+            <div className="bottomLeft">
+              <button className="btn" disabled={!canControl} onClick={() => doSetRelay('relay1', !state.relay_load1)} title="Toggle Load 1 relay">
+                Toggle Load 1
+              </button>
+              <button className="btn" disabled={!canControl} onClick={() => doSetRelay('relay2', !state.relay_load2)} title="Toggle Load 2 relay">
+                Toggle Load 2
+              </button>
+              <button className="btn danger" disabled={!canControl} onClick={doShed} title="Shed the smaller load (backend chooses)">
+                Shed Smaller Load
+              </button>
+            </div>
+            <div className="hint">Requires ESP ACK on `microgrid/control/ack`</div>
+          </div>
+        </div>
       </div>
 
       <div className="grid2">

@@ -23,6 +23,8 @@ export default function PowerFlowDiagram({
   load2W: number
   gridW: number
 }) {
+  const load1Off = !Number.isFinite(load1W) ? false : load1W <= 0.0001
+  const load2Off = !Number.isFinite(load2W) ? false : load2W <= 0.0001
   const p1 = clamp(load1W / 200, 0, 1)
   const p2 = clamp(load2W / 200, 0, 1)
   const ps = clamp(solarW / 200, 0, 1)
@@ -159,12 +161,12 @@ export default function PowerFlowDiagram({
         </div>
 
         <div className="flowCard flowCardLoad1">
-          <div className="flowCardTitle">Load 1</div>
+          <div className="flowCardTitle">Load 1 {load1Off ? '• OFF' : ''}</div>
           <div className="flowCardValue">{fmtW(load1W)}</div>
         </div>
 
         <div className="flowCard flowCardLoad2">
-          <div className="flowCardTitle">Load 2</div>
+          <div className="flowCardTitle">Load 2 {load2Off ? '• OFF' : ''}</div>
           <div className="flowCardValue">{fmtW(load2W)}</div>
         </div>
       </div>

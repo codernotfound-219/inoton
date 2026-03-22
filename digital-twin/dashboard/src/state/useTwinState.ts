@@ -11,6 +11,13 @@ function splitLoads(total: number) {
   return { load1, load2 }
 }
 
+function applyRelayMask(load1: number, load2: number, relay1On: boolean, relay2On: boolean) {
+  return {
+    load1: relay1On ? load1 : 0,
+    load2: relay2On ? load2 : 0,
+  }
+}
+
 export type TwinDerived = {
   gridImportW: number
   load1W: number
@@ -43,13 +50,14 @@ export function useTwinState(): { state: MicrogridState; derived: TwinDerived } 
 
       const gridImportW = Math.max(0, s.total_load - s.solar_watts)
       const { load1, load2 } = splitLoads(s.total_load)
+      const masked = applyRelayMask(load1, load2, s.relay_load1, s.relay_load2)
 
       const nextPoint: HistoryPoint = {
         t: Date.now(),
         solar_w: s.solar_watts,
         load_total_w: s.total_load,
-        load1_w: load1,
-        load2_w: load2,
+        load1_w: masked.load1,
+        load2_w: masked.load2,
         battery_soc: s.battery_soc,
         current_a: s.current_a,
         grid_import_w: gridImportW,
@@ -100,10 +108,11 @@ export function useTwinState(): { state: MicrogridState; derived: TwinDerived } 
   const derived = useMemo((): TwinDerived => {
     const gridImportW = Math.max(0, state.total_load - state.solar_watts)
     const { load1, load2 } = splitLoads(state.total_load)
+    const masked = applyRelayMask(load1, load2, state.relay_load1, state.relay_load2)
     return {
       gridImportW,
-      load1W: load1,
-      load2W: load2,
+      load1W: masked.load1,
+      load2W: masked.load2,
       connected,
       mode,
       setMode,

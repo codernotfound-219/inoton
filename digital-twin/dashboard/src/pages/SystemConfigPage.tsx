@@ -1,6 +1,6 @@
 import TopBar from '../components/TopBar'
 import { useTwinState } from '../state/useTwinState'
-import { shedLoad, setBatteryMode, setRelays } from '../api'
+// Controls moved to Dashboard page
 
 const tariff = [
   { period: 'Off-Peak', hours: '00:00 - 06:00', rate: '₹4.5', type: 'Off-Peak' },
@@ -24,30 +24,6 @@ export default function SystemConfigPage() {
   const { state, derived } = useTwinState()
 
   const canControl = derived.connected
-
-  const doSetRelay = async (which: 'relay1' | 'relay2', value: boolean) => {
-    try {
-      await setRelays({ [which]: value })
-    } catch {
-      // ignore for now (status is visible via relay state updates / connection chip)
-    }
-  }
-
-  const doShed = async () => {
-    try {
-      await shedLoad()
-    } catch {
-      // ignore
-    }
-  }
-
-  const doBatteryMode = async (mode: 'CHARGE' | 'DISCHARGE' | 'IDLE' | 'AUTO') => {
-    try {
-      await setBatteryMode(mode)
-    } catch {
-      // ignore
-    }
-  }
 
   return (
     <div className="page">
@@ -115,74 +91,13 @@ export default function SystemConfigPage() {
       <div className="panel">
         <div className="panelHeader">
           <div className="panelTitle">Digital Twin Control</div>
-          <div className="panelHint">Manual commands (framework)</div>
+          <div className="panelHint">Moved to Dashboard</div>
         </div>
         <div className="panelFooter">
           <div className="metric">Bus V: {state.bus_v ? `${state.bus_v.toFixed(2)} V` : '—'}</div>
           <div className="metric">Load 1 Relay: {state.relay_load1 ? 'ON' : 'OFF'}</div>
           <div className="metric">Load 2 Relay: {state.relay_load2 ? 'ON' : 'OFF'}</div>
-        </div>
-
-        <div className="bottomBar">
-          <div className="bottomLeft">
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doBatteryMode('CHARGE')}
-              title="Force battery controller into CHARGE mode"
-            >
-              Battery: Charge
-            </button>
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doBatteryMode('DISCHARGE')}
-              title="Force battery controller into DISCHARGE mode"
-            >
-              Battery: Discharge
-            </button>
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doBatteryMode('IDLE')}
-              title="Force battery controller into IDLE (both relays off)"
-            >
-              Battery: Idle
-            </button>
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doBatteryMode('AUTO')}
-              title="Return battery controller to automatic voltage-based control"
-            >
-              Battery: Auto
-            </button>
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doSetRelay('relay1', !state.relay_load1)}
-              title="Toggle Load 1 relay"
-            >
-              Toggle Load 1
-            </button>
-            <button
-              className="btn"
-              disabled={!canControl}
-              onClick={() => doSetRelay('relay2', !state.relay_load2)}
-              title="Toggle Load 2 relay"
-            >
-              Toggle Load 2
-            </button>
-            <button
-              className="btn danger"
-              disabled={!canControl}
-              onClick={doShed}
-              title="Shed the smaller load (backend chooses)"
-            >
-              Shed Smaller Load
-            </button>
-          </div>
-          <div className="hint">Requires ESP ACK on `microgrid/control/ack`</div>
+          <div className={`badge ${canControl ? 'ok' : 'muted'}`}>{canControl ? 'Ready' : 'Offline'}</div>
         </div>
       </div>
 
