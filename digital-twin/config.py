@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # MQTT Configuration
-    MQTT_BROKER: str = "MQTT_BROKER_IP" 
+    # Provide via environment/.env (see .env.example). Defaults to localhost.
+    MQTT_BROKER: str = "localhost"
     MQTT_PORT: int = 1883
     
     # Topic Definitions (Standardize these now to avoid mismatches)

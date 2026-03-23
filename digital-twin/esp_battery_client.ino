@@ -6,6 +6,9 @@ const int currentPin = 34;
 
 #include <WiFi.h>
 #include <PubSubClient.h>
+
+// Local secrets (not committed). See wifi_secrets.h.example
+#include "wifi_secrets.h"
 #include <ArduinoJson.h>
 
 // --- Device Identity ---
@@ -14,9 +17,9 @@ const int currentPin = 34;
 const char* device_id = "battery";
 
 // --- NETWORK CONFIGURATION ---
-const char* ssid = "WIFI_SSID";
-const char* password = "WIFI_PASSWORD";
-const char* mqtt_server = "MQTT_BROKER_IP";
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
+const char* mqtt_server = MQTT_SERVER;
 
 // --- MQTT TOPICS ---
 const char* topic_telemetry = "microgrid/telemetry";

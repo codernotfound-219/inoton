@@ -1,11 +1,14 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+
+// Local secrets (not committed). See wifi_secrets.h.example
+#include "wifi_secrets.h"
 #include <ArduinoJson.h>
 
 // --- Network Configuration ---
-const char* ssid = "WIFI_SSID";
-const char* password = "WIFI_PASSWORD";
-const char* mqtt_server = "MQTT_BROKER_IP"; // Your Mac's IP (from config.py)
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
+const char* mqtt_server = MQTT_SERVER;
 
 // --- MQTT Topics ---
 const char* topic_telemetry = "microgrid/telemetry";
